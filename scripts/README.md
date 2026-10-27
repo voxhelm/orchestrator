@@ -251,7 +251,7 @@ Single entry point for interrogating and cleaning up ECS tasks. Replaces `list_e
 
 **Common options (all subcommands):**
 - `--env` - Environment (dev/prod), default: dev
-- `--cluster` - ECS cluster name (default: clawtalk-{env})
+- `--cluster` - ECS cluster name (default: voxhelm-{env})
 - `--profile` - AWS profile, default: default
 - `--region` - AWS region, default: ap-southeast-2
 
@@ -329,7 +329,7 @@ python scripts/inspect_agent.py oc-e20ac9f1 --env prod
 - `--region` - AWS region, default: ap-southeast-2
 - `--logs` - Fetch CloudWatch logs
 - `--since` - Log window in minutes, default: 60
-- `--cluster` - ECS cluster name (default: clawtalk-{env})
+- `--cluster` - ECS cluster name (default: voxhelm-{env})
 
 **What it shows:**
 1. DynamoDB record (status, IP, task ARN, timestamps)

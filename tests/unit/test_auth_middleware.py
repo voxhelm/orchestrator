@@ -88,7 +88,7 @@ def test_protected_endpoint_with_valid_api_key(mock_get_auth_client, client, mon
     mock_get_auth_client.return_value = mock_client
 
     response = client.get(
-        "/test", headers={"Authorization": "Bearer sk-clawtalk-test-key"}
+        "/test", headers={"Authorization": "Bearer sk-voxhelm-test-key"}
     )
     assert response.status_code == 200
     assert response.json()["user_id"] == "user-123"
@@ -121,7 +121,7 @@ def test_protected_endpoint_auth_service_error(mock_get_auth_client, client):
     mock_get_auth_client.return_value = mock_client
 
     response = client.get(
-        "/test", headers={"Authorization": "Bearer sk-clawtalk-test-key"}
+        "/test", headers={"Authorization": "Bearer sk-voxhelm-test-key"}
     )
     assert response.status_code == 503
     assert "Auth service error" in response.json()["detail"]

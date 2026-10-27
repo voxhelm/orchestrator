@@ -33,7 +33,7 @@ DynamoDB (Local)                Test Container
 │  - openclaw URL  │            │                            │
 │                  │            │  2. Write Config Files:    │
 │ User Config:     │            │     ├─ openclaw.json       │
-│  - API keys      │            │     └─ clawtalk.json       │
+│  - API keys      │            │     └─ voxhelm.json       │
 │  - LLM provider  │            │                            │
 │                  │            │  3. Start Services:        │
 └──────────────────┘            │     ├─ OpenClaw (18789)    │
@@ -190,8 +190,8 @@ curl http://localhost:8789/users/test-user-123/agents | jq
 ### 5. Inspect Configs Inside Container
 
 ```bash
-# Agent config (clawtalk.json)
-docker exec orchestrator-test-container cat /home/node/.clawtalk/clawtalk.json | jq
+# Agent config (voxhelm.json)
+docker exec orchestrator-test-container cat /home/node/.voxhelm/voxhelm.json | jq
 
 # OpenClaw config (openclaw.json)
 docker exec orchestrator-test-container cat /home/node/.openclaw/openclaw.json | jq
@@ -287,7 +287,7 @@ docker inspect orchestrator-dynamodb-test | jq '.[0].NetworkSettings.Networks'
 
 **Error:** `Cannot find openclaw-agent directory`
 
-**Cause:** Dockerfile expects to be run from clawtalk root, not orchestrator directory
+**Cause:** Dockerfile expects to be run from voxhelm root, not orchestrator directory
 
 **Fix:** Build context is correct in docker-compose.yml (context: `../..`)
 
@@ -320,7 +320,7 @@ Look for this sequence in logs:
 [3/4] Building OpenClaw config...
 ✓ Config written to /home/node/.openclaw/openclaw.json
 [4/4] Building openclaw-agent config...
-✓ Config written to /home/node/.clawtalk/clawtalk.json
+✓ Config written to /home/node/.voxhelm/voxhelm.json
 [entrypoint] ✓ Configuration files created successfully
 
 [entrypoint] === Configuration Summary ===
@@ -432,7 +432,7 @@ docker logs orchestrator-test-container -f
 
 ✅ **DynamoDB configuration storage works**
 ✅ **Configuration fetch from DynamoDB works**
-✅ **Both config files (openclaw.json, clawtalk.json) generated correctly**
+✅ **Both config files (openclaw.json, voxhelm.json) generated correctly**
 ✅ **Multi-service startup coordination works**
 ✅ **OpenClaw can respond to queries**
 ✅ **openclaw-agent starts with DynamoDB config**

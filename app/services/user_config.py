@@ -3,7 +3,7 @@ User configuration service for managing per-user configs in DynamoDB.
 
 Stores two types of configs:
 1. OpenClaw config (openclaw.json) - for OpenClaw gateway
-2. Agent config (clawtalk.json) - for openclaw-agent
+2. Agent config (voxhelm.json) - for openclaw-agent
 
 Both stored in the same DynamoDB table using single-table design:
 - pk: USER#{user_id}, sk: CONFIG#{config_name} - Named user config
@@ -340,7 +340,7 @@ class UserConfigService:
         self, user_id: str, config_name: str = "default"
     ) -> Dict[str, Any]:
         """
-        Build openclaw-agent config (clawtalk.json).
+        Build openclaw-agent config (voxhelm.json).
 
         This is the config for the openclaw-agent service, which manages
         voice agents. It needs auth gateway credentials (from user config).
@@ -350,7 +350,7 @@ class UserConfigService:
             config_name: Named configuration (default: "default")
 
         Returns:
-            Dict suitable for clawtalk.json
+            Dict suitable for voxhelm.json
         """
         user_config = self.get_user_config(user_id, config_name) or {}
         system_config = self.get_system_config()

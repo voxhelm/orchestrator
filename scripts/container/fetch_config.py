@@ -5,7 +5,7 @@ Fetch configuration from DynamoDB and write config files for container startup.
 This script runs inside the container at startup to fetch user-specific configuration
 from DynamoDB and write it to the appropriate config files:
 - ~/.openclaw/openclaw.json - OpenClaw gateway config
-- ~/.clawtalk/clawtalk.json - openclaw-agent config
+- ~/.voxhelm/voxhelm.json - openclaw-agent config
 
 Environment variables required:
 - USER_ID: The user ID to fetch config for
@@ -309,8 +309,8 @@ def main():
     parser.add_argument(
         "--agent-config",
         type=Path,
-        default=Path.home() / ".clawtalk" / "clawtalk.json",
-        help="Path to write agent config (default: ~/.clawtalk/clawtalk.json)",
+        default=Path.home() / ".voxhelm" / "voxhelm.json",
+        help="Path to write agent config (default: ~/.voxhelm/voxhelm.json)",
     )
     parser.add_argument(
         "--table",

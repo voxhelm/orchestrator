@@ -39,7 +39,7 @@ class MockAuthGatewayHandler(BaseHTTPRequestHandler):
 
         Token format can be:
         - "user-id:token-value" -> extracts user-id
-        - "sk-clawtalk-xyz" -> returns "user-sk-clawtalk"
+        - "sk-voxhelm-xyz" -> returns "user-sk-voxhelm"
         - Any other format -> uses first part before : or whole token
         """
         auth_header = self.headers.get("Authorization", "")

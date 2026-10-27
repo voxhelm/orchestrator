@@ -52,7 +52,7 @@ ENTRYPOINT ["/start.sh"]
 3. Starts OpenClaw gateway on port 18789 (background)
 4. Waits for OpenClaw to be healthy
 5. If RUN_MODE=test, starts mock-auth-gateway and mock-voice-gateway
-6. Creates agent config at `/home/node/.clawtalk/clawtalk.json`
+6. Creates agent config at `/home/node/.voxhelm/voxhelm.json`
 7. Detects LLM provider from environment (ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY)
 8. Starts openclaw-agent
 9. Waits for any process to exit
@@ -76,8 +76,8 @@ elif [ -n "$OPENROUTER_API_KEY" ]; then
     LLM_KEY="$OPENROUTER_API_KEY"
 fi
 
-# Creates clawtalk.json dynamically
-cat > /home/node/.clawtalk/clawtalk.json << AGENTCONFIG
+# Creates voxhelm.json dynamically
+cat > /home/node/.voxhelm/voxhelm.json << AGENTCONFIG
 {
   "llm_provider": "$LLM_PROVIDER",
   "${LLM_PROVIDER}_api_key": "$LLM_KEY",
@@ -135,7 +135,7 @@ AGENTCONFIG
 
 **Note:** Environment variables like `${OPENROUTER_API_KEY}` are expanded by OpenClaw at runtime.
 
-### 4. Agent Config (clawtalk.json)
+### 4. Agent Config (voxhelm.json)
 **Location:** Created dynamically in `docker-start.sh`
 
 **Structure:**
@@ -168,7 +168,7 @@ AUTH_GATEWAY_API_KEY=test-api-key
 RUN_MODE=production
 ANTHROPIC_API_KEY=sk-ant-api03-...  # From DynamoDB
 OPENCLAW_GATEWAY_TOKEN=<secure-token>
-AUTH_GATEWAY_URL=https://auth.clawtalk.com
+AUTH_GATEWAY_URL=https://auth.voxhelm.com
 AUTH_GATEWAY_API_KEY=<user-specific-key>  # From DynamoDB
 USER_ID=<user-id>  # For config fetch
 CONTAINER_ID=<container-id>
@@ -184,7 +184,7 @@ Our orchestrator implementation uses the same pattern but with DynamoDB:
 
 1. **Container startup:** `entrypoint-e2e.sh` (similar to `docker-start.sh`)
 2. **Config fetch:** `fetch_config.py` fetches from DynamoDB
-3. **Config files:** Creates both `openclaw.json` and `clawtalk.json`
+3. **Config files:** Creates both `openclaw.json` and `voxhelm.json`
 4. **Service startup:** OpenClaw → Mocks → Agent (same order)
 
 ### Differences
@@ -245,8 +245,8 @@ pip3 install boto3
 /home/node/.openclaw/
   openclaw.json (600)           # OpenClaw gateway config
 
-/home/node/.clawtalk/
-  clawtalk.json (600)           # openclaw-agent config
+/home/node/.voxhelm/
+  voxhelm.json (600)           # openclaw-agent config
 
 /tmp/
   openclaw.log                  # OpenClaw logs
@@ -271,7 +271,7 @@ pip3 install boto3
 - `models.providers.{provider}.apiKey` - LLM API key
 - Environment variable expansion: `${ANTHROPIC_API_KEY}`
 
-### clawtalk.json (openclaw-agent)
+### voxhelm.json (openclaw-agent)
 
 **Purpose:** Configure openclaw-agent with LLM, auth gateway, and OpenClaw connection
 
@@ -328,7 +328,7 @@ From `docker-start.sh`:
 
 4. Create Agent Config
    - Detect LLM provider from env vars
-   - Create /home/node/.clawtalk/clawtalk.json
+   - Create /home/node/.voxhelm/voxhelm.json
    - Set permissions (700/600)
 
 5. Start openclaw-agent

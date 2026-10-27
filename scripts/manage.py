@@ -61,7 +61,7 @@ Examples:
   manage.py k8s cleanup --dry-run
   manage.py k8s cleanup --include-stopped
   manage.py k8s reconcile
-  manage.py k8s reconcile --fix --kubeconfig-ssm-path /clawtalk/dev/kubeconfig
+  manage.py k8s reconcile --fix --kubeconfig-ssm-path /voxhelm/dev/kubeconfig
   manage.py clusters list
   manage.py config load --system --auth-gateway-url https://...
   manage.py config load --user-id abc123 --anthropic-api-key sk-ant-...
@@ -2244,7 +2244,7 @@ def build_parser() -> argparse.ArgumentParser:
             "  manage.py k8s reconcile                          # report only\n"
             "  manage.py k8s reconcile --dry-run                # preview changes\n"
             "  manage.py k8s reconcile --fix                    # apply fixes\n"
-            "  manage.py k8s reconcile --fix --kubeconfig-ssm-path /clawtalk/dev/kubeconfig"
+            "  manage.py k8s reconcile --fix --kubeconfig-ssm-path /voxhelm/dev/kubeconfig"
         ),
     )
     add_common(p)

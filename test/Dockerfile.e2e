@@ -56,9 +56,9 @@ COPY openclaw-agent/test/integration/openclaw.json /tmp/openclaw-template.json
 RUN chmod +x /opt/scripts/fetch_config.py /opt/scripts/entrypoint.sh
 
 # Create directories with correct permissions
-RUN mkdir -p /home/node/.openclaw /home/node/.clawtalk && \
-    chown -R node:node /home/node/.openclaw /home/node/.clawtalk && \
-    chmod 700 /home/node/.openclaw /home/node/.clawtalk
+RUN mkdir -p /home/node/.openclaw /home/node/.voxhelm && \
+    chown -R node:node /home/node/.openclaw /home/node/.voxhelm && \
+    chmod 700 /home/node/.openclaw /home/node/.voxhelm
 
 # Switch back to node user
 USER node

@@ -237,7 +237,7 @@ The Lambda does **not** store a long-lived auth key. On every cold-start, `scrip
    ```bash
    aws --profile <profile-for-your-account> ssm put-parameter \
      --region ap-southeast-2 \
-     --name "/clawtalk/orchestrator/<env>/tailscale/api-key" \
+     --name "/voxhelm/orchestrator/<env>/tailscale/api-key" \
      --type SecureString \
      --value "tskey-api-..." \
      --overwrite
@@ -279,7 +279,7 @@ In the [Tailscale Admin Console](https://login.tailscale.com/admin/settings/keys
 ```bash
 aws --profile <profile-for-your-account> ssm put-parameter \
   --region ap-southeast-2 \
-  --name "/clawtalk/orchestrator/dev/tailscale/api-key" \
+  --name "/voxhelm/orchestrator/dev/tailscale/api-key" \
   --type SecureString \
   --value "tskey-api-..." \
   --overwrite
@@ -300,7 +300,7 @@ terraform apply -var="orchestrator_image_tag=dev-latest"
 ```
 
 This creates or confirms:
-- The SSM parameter slot `/clawtalk/orchestrator/dev/tailscale/api-key`
+- The SSM parameter slot `/voxhelm/orchestrator/dev/tailscale/api-key`
 - An IAM policy granting the Lambda `ssm:GetParameter` on that path
 - The `TAILSCALE_API_KEY_SSM_PATH` environment variable on the Lambda function
 
@@ -318,7 +318,7 @@ When your personal API key approaches expiry, generate a new one in the Tailscal
 ```bash
 aws --profile <profile-for-your-account> ssm put-parameter \
   --region ap-southeast-2 \
-  --name "/clawtalk/orchestrator/dev/tailscale/api-key" \
+  --name "/voxhelm/orchestrator/dev/tailscale/api-key" \
   --type SecureString \
   --value "tskey-api-<new-key>" \
   --overwrite

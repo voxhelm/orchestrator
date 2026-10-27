@@ -96,8 +96,8 @@ jobs:
               headers={
                   'Authorization': f\"Bearer {os.environ['OPENROUTER_API_KEY']}\",
                   'Content-Type': 'application/json',
-                  'HTTP-Referer': 'https://github.com/clawtalk-team',
-                  'X-Title': 'ClawTalk PR Review'
+                  'HTTP-Referer': 'https://github.com/voxhelm',
+                  'X-Title': 'Voxhelm PR Review'
               }
           )
 

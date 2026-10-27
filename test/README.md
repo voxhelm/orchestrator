@@ -44,9 +44,9 @@ The test container runs 4 services in a single container:
    │  ├─ GET USER#test-user-123 + CONFIG#primary
    │  ├─ GET SYSTEM + CONFIG#defaults
    │  ├─ Build openclaw.json
-   │  └─ Build clawtalk.json
+   │  └─ Build voxhelm.json
    └─ Start openclaw-agent
-      ├─ Reads ~/.clawtalk/clawtalk.json
+      ├─ Reads ~/.voxhelm/voxhelm.json
       ├─ Authenticates with auth-gateway
       └─ Registers agents
 
@@ -161,7 +161,7 @@ curl http://localhost:9090/metrics | jq
 
 ```bash
 # Agent config
-docker exec orchestrator-test-container cat /home/node/.clawtalk/clawtalk.json | jq
+docker exec orchestrator-test-container cat /home/node/.voxhelm/voxhelm.json | jq
 
 # OpenClaw config
 docker exec orchestrator-test-container cat /home/node/.openclaw/openclaw.json | jq
@@ -312,7 +312,7 @@ docker-compose -f test/docker-compose.e2e.yml run --rm test-container /bin/bash
 │  │ 1. fetch_config.py                            │  │
 │  │    ├─ Fetch from DynamoDB                     │  │
 │  │    ├─ Build openclaw.json                     │  │
-│  │    └─ Build clawtalk.json                     │  │
+│  │    └─ Build voxhelm.json                     │  │
 │  └──────────────────────────────────────────────┘  │
 │                                                      │
 │  ┌──────────────────────────────────────────────┐  │
@@ -322,7 +322,7 @@ docker-compose -f test/docker-compose.e2e.yml run --rm test-container /bin/bash
 │                                                      │
 │  ┌──────────────────────────────────────────────┐  │
 │  │ 3. openclaw-agent (port 8080)                 │  │
-│  │    ├─ Reads clawtalk.json                     │  │
+│  │    ├─ Reads voxhelm.json                     │  │
 │  │    ├─ Authenticates with auth-gateway         │  │
 │  │    └─ Manages voice agents                    │  │
 │  └──────────────────────────────────────────────┘  │

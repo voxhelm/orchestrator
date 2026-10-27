@@ -9,7 +9,7 @@ services:
       - "8000:8000"
     networks:
       - orchestrator-network
-      - e2e_clawtalk
+      - e2e_voxhelm
 
   orchestrator:
     env_file:
@@ -19,7 +19,7 @@ services:
       dockerfile: Dockerfile
       args:
         GIT_COMMIT: ${GIT_COMMIT:-dev}
-    image: clawtalk-orchestrator:${GIT_COMMIT:-dev}
+    image: voxhelm-orchestrator:${GIT_COMMIT:-dev}
     container_name: orchestrator-app
     ports:
       - "8574:8574"
@@ -35,17 +35,17 @@ services:
       - ECS_TASK_DEFINITION=openclaw-agent
       - ECS_CONTAINER_NAME=openclaw-agent
       - AUTH_GATEWAY_URL=http://auth-gateway:8789
-      - SSM_PREFIX=/clawtalk/orchestrator
+      - SSM_PREFIX=/voxhelm/orchestrator
       - MASTER_API_KEY=test-master-key
     depends_on:
       - dynamodb-local
     networks:
       - orchestrator-network
-      - e2e_clawtalk
+      - e2e_voxhelm
     command: uvicorn app.main:app --host 0.0.0.0 --port 8574
 
 networks:
   orchestrator-network:
     driver: bridge
-  e2e_clawtalk:
+  e2e_voxhelm:
     external: true

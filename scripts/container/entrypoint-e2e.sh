@@ -35,8 +35,8 @@ log_section() {
 log_section "Fetching Configuration from DynamoDB"
 
 # Create config directories
-mkdir -p /home/node/.openclaw /home/node/.clawtalk
-chmod 700 /home/node/.openclaw /home/node/.clawtalk
+mkdir -p /home/node/.openclaw /home/node/.voxhelm
+chmod 700 /home/node/.openclaw /home/node/.voxhelm
 
 # Validate required environment variables
 if [ -z "$USER_ID" ]; then
@@ -60,7 +60,7 @@ if ! python3 /opt/scripts/fetch_config.py \
     --user-id "$USER_ID" \
     --container-id "$CONTAINER_ID" \
     --openclaw-config /home/node/.openclaw/openclaw.json \
-    --agent-config /home/node/.clawtalk/clawtalk.json; then
+    --agent-config /home/node/.voxhelm/voxhelm.json; then
     log_error "Failed to fetch configuration from DynamoDB"
     log_error "Check that config exists in DynamoDB for user_id=$USER_ID"
     exit 1
@@ -72,7 +72,7 @@ if [ ! -f /home/node/.openclaw/openclaw.json ]; then
     exit 1
 fi
 
-if [ ! -f /home/node/.clawtalk/clawtalk.json ]; then
+if [ ! -f /home/node/.voxhelm/voxhelm.json ]; then
     log_error "Agent config not found after fetch"
     exit 1
 fi
@@ -83,18 +83,18 @@ log_info "✓ Configuration files created successfully"
 if command -v jq &> /dev/null; then
     log_section "Configuration Summary"
 
-    LLM_PROVIDER=$(jq -r '.llm_provider // "not set"' /home/node/.clawtalk/clawtalk.json)
-    AUTH_GATEWAY_URL=$(jq -r '.auth_gateway_url // "not set"' /home/node/.clawtalk/clawtalk.json)
-    OPENCLAW_URL=$(jq -r '.openclaw_url // "not set"' /home/node/.clawtalk/clawtalk.json)
+    LLM_PROVIDER=$(jq -r '.llm_provider // "not set"' /home/node/.voxhelm/voxhelm.json)
+    AUTH_GATEWAY_URL=$(jq -r '.auth_gateway_url // "not set"' /home/node/.voxhelm/voxhelm.json)
+    OPENCLAW_URL=$(jq -r '.openclaw_url // "not set"' /home/node/.voxhelm/voxhelm.json)
 
     log_info "LLM Provider: $LLM_PROVIDER"
     log_info "Auth Gateway URL: $AUTH_GATEWAY_URL"
     log_info "OpenClaw URL: $OPENCLAW_URL"
 
     # Check for API keys (without showing them)
-    HAS_ANTHROPIC=$(jq -r '.anthropic_api_key // empty' /home/node/.clawtalk/clawtalk.json)
-    HAS_OPENAI=$(jq -r '.openai_api_key // empty' /home/node/.clawtalk/clawtalk.json)
-    HAS_AUTH=$(jq -r '.auth_gateway_api_key // empty' /home/node/.clawtalk/clawtalk.json)
+    HAS_ANTHROPIC=$(jq -r '.anthropic_api_key // empty' /home/node/.voxhelm/voxhelm.json)
+    HAS_OPENAI=$(jq -r '.openai_api_key // empty' /home/node/.voxhelm/voxhelm.json)
+    HAS_AUTH=$(jq -r '.auth_gateway_api_key // empty' /home/node/.voxhelm/voxhelm.json)
 
     if [ -n "$HAS_ANTHROPIC" ]; then
         log_info "Anthropic API key: ${HAS_ANTHROPIC:0:20}..."

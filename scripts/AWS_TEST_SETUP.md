@@ -320,7 +320,7 @@ Once the test passes:
 
    # Inside container:
    cat ~/.openclaw/openclaw.json
-   cat ~/.clawtalk/clawtalk.json
+   cat ~/.voxhelm/voxhelm.json
    ```
 
 4. **Test agent functionality**:

@@ -4,7 +4,7 @@
 #
 # This script:
 # 1. Fetches configuration from DynamoDB
-# 2. Writes openclaw.json and clawtalk.json config files
+# 2. Writes openclaw.json and voxhelm.json config files
 # 3. Starts the openclaw-agent process
 #
 # Required environment variables:
@@ -74,7 +74,7 @@ fi
 
 # Verify config files were created
 OPENCLAW_CONFIG="$HOME/.openclaw/openclaw.json"
-AGENT_CONFIG="$HOME/.clawtalk/clawtalk.json"
+AGENT_CONFIG="$HOME/.voxhelm/voxhelm.json"
 
 if [ ! -f "$OPENCLAW_CONFIG" ]; then
     log_error "OpenClaw config not found at $OPENCLAW_CONFIG"

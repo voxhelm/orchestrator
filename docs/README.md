@@ -53,7 +53,7 @@ Containers fetch their configuration on startup using `fetch_config.py`.
 2. Container runs `fetch_config.py` to retrieve config from DynamoDB
 3. Two config files generated:
    - `openclaw.json` - OpenClaw gateway configuration
-   - `clawtalk.json` - openclaw-agent configuration
+   - `voxhelm.json` - openclaw-agent configuration
 4. Services start: OpenClaw → openclaw-agent
 5. Agent registers with auth-gateway
 
@@ -82,7 +82,7 @@ See [E2E_TEST_GUIDE.md](E2E_TEST_GUIDE.md) for details.
 │  ┌──────────────────────────────┐   │
 │  │ 2. Generate Config Files     │   │
 │  │    - openclaw.json           │   │
-│  │    - clawtalk.json           │   │
+│  │    - voxhelm.json           │   │
 │  └──────────────────────────────┘   │
 │  ┌──────────────────────────────┐   │
 │  │ 3. Start Services            │   │

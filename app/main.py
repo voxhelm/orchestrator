@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
 settings = get_settings()
 
 app = FastAPI(
-    title="ClawTalk Orchestrator API",
+    title="Voxhelm Orchestrator API",
     description="""
 ## Container Orchestrator for OpenClaw Agents
 
