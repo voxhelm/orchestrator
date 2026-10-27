@@ -81,7 +81,7 @@ jobs:
           ISSUE_BODY: ${{ steps.issue.outputs.body }}
         run: |
           claude --print --dangerously-skip-permissions \
-            "You are the Orchestrator Agent for ClawTalk.
+            "You are the Orchestrator Agent for Voxhelm.
              Read CONTRIBUTING.md for the conventions and constraints of this repo.
 
              Implement issue #$ISSUE_NUMBER: $ISSUE_TITLE

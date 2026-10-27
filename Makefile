@@ -127,7 +127,7 @@ docker-build:
 	  --sbom=false \
 	  --build-arg GIT_COMMIT=$$(git rev-parse --short HEAD) \
 	  --platform linux/arm64 \
-	  -t clawtalk-orchestrator:$(IMAGE_TAG) .
+	  -t voxhelm-orchestrator:$(IMAGE_TAG) .
 
 docker-up:
 	GIT_COMMIT=$$(git rev-parse --short HEAD) docker compose up -d

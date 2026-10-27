@@ -264,7 +264,7 @@ if AWS_PROFILE=$AWS_PROFILE python3 "$ORCHESTRATOR_DIR/scripts/container/fetch_c
     --user-id "$USER_ID" \
     --container-id "$CONTAINER_ID" \
     --openclaw-config "$TEST_CONFIG_DIR/openclaw.json" \
-    --agent-config "$TEST_CONFIG_DIR/clawtalk.json" \
+    --agent-config "$TEST_CONFIG_DIR/voxhelm.json" \
     --table "$DYNAMODB_TABLE" \
     --region "$AWS_REGION"; then
     log_info "✓ Config fetch successful"
@@ -279,8 +279,8 @@ if [ ! -f "$TEST_CONFIG_DIR/openclaw.json" ]; then
     exit 1
 fi
 
-if [ ! -f "$TEST_CONFIG_DIR/clawtalk.json" ]; then
-    log_error "clawtalk.json not created"
+if [ ! -f "$TEST_CONFIG_DIR/voxhelm.json" ]; then
+    log_error "voxhelm.json not created"
     exit 1
 fi
 
@@ -292,7 +292,7 @@ log_info "openclaw.json structure:"
 jq '{gateway: .gateway, models: {providers: (.models.providers | keys)}}' "$TEST_CONFIG_DIR/openclaw.json"
 
 log_info ""
-log_info "clawtalk.json structure:"
+log_info "voxhelm.json structure:"
 jq '{
     user_id,
     llm_provider,
@@ -300,7 +300,7 @@ jq '{
     openclaw_url,
     has_anthropic_key: (.anthropic_api_key != ""),
     has_auth_key: (.auth_gateway_api_key != "")
-}' "$TEST_CONFIG_DIR/clawtalk.json"
+}' "$TEST_CONFIG_DIR/voxhelm.json"
 
 # Cleanup temp configs
 rm -rf "$TEST_CONFIG_DIR"

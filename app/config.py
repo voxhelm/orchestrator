@@ -79,7 +79,7 @@ class Settings(BaseSettings):
     orchestrator_url: str = "http://localhost:8000"
 
     # SSM Parameter Store
-    ssm_prefix: str = "/clawtalk/orchestrator"
+    ssm_prefix: str = "/voxhelm/orchestrator"
 
     # Kubernetes
     k8s_namespace: str = "openclaw"

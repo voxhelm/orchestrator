@@ -167,5 +167,5 @@ def test_store_config_in_ssm():
         config = {"key": "value"}
         result = config_store.store_config("user-123", "oc-test", config)
 
-        assert result == "/clawtalk/orchestrator/user-123/oc-test"
+        assert result == "/voxhelm/orchestrator/user-123/oc-test"
         mock_ssm.return_value.put_parameter.assert_called_once()

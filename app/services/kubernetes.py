@@ -27,7 +27,7 @@ from app.services.user_config import UserConfigService
 logger = logging.getLogger(__name__)
 
 # Event routing constants used by lambda_handler.py
-PROVISION_EVENT_SOURCE = "clawtalk.orchestrator"
+PROVISION_EVENT_SOURCE = "voxhelm.orchestrator"
 PROVISION_EVENT_TYPE = "provision_k8s_pod"
 
 # Module-level cached client — config is loaded once on first use.
