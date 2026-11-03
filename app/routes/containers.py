@@ -135,12 +135,16 @@ async def get_container(request: Request, container_id: str):
         404: {"description": "Container not found"},
     },
 )
-async def delete_container(request: Request, container_id: str):
+async def delete_container(request: Request, container_id: str, delete_storage: bool = False):
     """
     Delete and stop a container.
 
-    This will stop the ECS task and mark the container as STOPPED.
+    This will stop the ECS task or k8s pod and mark the container as STOPPED.
     The container record will remain in the database for audit purposes.
+
+    For k8s agents, the agent's persistent volume (OpenClaw config, workspace,
+    MEMORY.md, sessions) is kept so a relaunch keeps its memory. Pass
+    `delete_storage=true` when the agent itself is being deleted to remove it.
     """
     user_id = request.state.user_id
 
@@ -149,9 +153,14 @@ async def delete_container(request: Request, container_id: str):
         logger.warning("delete_container: not found user=%s container=%s", user_id, container_id)
         raise HTTPException(status_code=404, detail="Container not found")
 
-    logger.info("delete_container: user=%s container=%s backend=%s", user_id, container_id, container.backend)
+    logger.info(
+        "delete_container: user=%s container=%s backend=%s delete_storage=%s",
+        user_id, container_id, container.backend, delete_storage,
+    )
     if container.backend == "k8s":
-        k8s.stop_container(user_id=user_id, container_id=container_id)
+        await run_in_threadpool(
+            k8s.stop_container, user_id=user_id, container_id=container_id, delete_storage=delete_storage
+        )
     else:
         ecs.stop_container(user_id=user_id, container_id=container_id)
 

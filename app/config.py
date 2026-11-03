@@ -91,6 +91,11 @@ class Settings(BaseSettings):
     k8s_kubeconfig_ssm_path: Optional[str] = None  # SSM path storing kubeconfig YAML (takes precedence over k8s_kubeconfig)
     k8s_context: Optional[str] = None  # Kubernetes context to use; None = current context
     k8s_api_timeout: float = 8.0  # Per-call connect+read timeout for kubernetes API requests (seconds)
+    # Persistent storage for agent pods: one PVC per agent, mounted at /home/node/.openclaw
+    # so OpenClaw config, workspaces, MEMORY.md and sessions survive pod recreation.
+    k8s_agent_storage_enabled: bool = True
+    k8s_agent_storage_size: str = "2Gi"
+    k8s_agent_storage_class: Optional[str] = None  # None = cluster default StorageClass (k3s: local-path)
     default_backend: str = "k8s"  # Compute backend: "ecs" or "k8s"
 
 
