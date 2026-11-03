@@ -7,6 +7,7 @@ between ECS and k8s with a single conditional.
 import json
 import logging
 import os
+import re
 import threading
 import time
 import uuid
@@ -131,6 +132,159 @@ def _get_k8s_client() -> k8s_client.CoreV1Api:
 
 def _generate_container_id() -> str:
     return f"oc-{uuid.uuid4().hex[:8]}"
+
+
+# ── Persistent agent storage ──────────────────────────────────────────────────
+
+# OpenClaw keeps its config, agent workspaces (SOUL.md, MEMORY.md, ...) and
+# session transcripts under this directory. It is backed by a PVC so a pod
+# recreate or agent relaunch does not wipe the agent's memory.
+AGENT_DATA_MOUNT_PATH = "/home/node/.openclaw"
+AGENT_DATA_VOLUME = "openclaw-data"
+NODE_UID = 1000  # "node" user in the openclaw-agent image
+
+_DNS1123_INVALID = re.compile(r"[^a-z0-9-]+")
+
+
+def agent_pvc_name(agent_id: Optional[str], container_id: str) -> str:
+    """Return the PVC name for an agent's persistent data.
+
+    Keyed by agent_id when there is one, so a relaunched agent (new container
+    id) reattaches to the same data. Containers without an agent (e.g.
+    onboarding) get a container-scoped PVC that is deleted with the container.
+    """
+    key = agent_id or container_id
+    slug = _DNS1123_INVALID.sub("-", key.lower()).strip("-")
+    return f"oc-data-{slug}"[:63].rstrip("-")
+
+
+def _is_agent_scoped(agent_id: Optional[str]) -> bool:
+    return bool(agent_id)
+
+
+def _label_value(value: str) -> str:
+    """Coerce a string into a valid k8s label value (<=63 chars, alnum/-_.)."""
+    return re.sub(r"[^A-Za-z0-9_.-]+", "-", value)[:63].strip("-_.")
+
+
+class StorageOwnershipError(Exception):
+    """An existing PVC belongs to a different user than the requester."""
+
+
+def _ensure_agent_pvc(
+    api: k8s_client.CoreV1Api,
+    namespace: str,
+    pvc_name: str,
+    user_id: str,
+    agent_id: Optional[str],
+    container_id: str,
+) -> None:
+    """Create the agent's PVC if missing; reuse it if it already exists.
+
+    Reusing is the point: the PVC outlives pods so the agent keeps its memory.
+    An existing PVC is only reused when its user_id label matches, so a caller
+    cannot mount another user's agent data by passing that agent's id.
+    """
+    settings = get_settings()
+    timeout = (settings.k8s_api_timeout, settings.k8s_api_timeout)
+    labels = {
+        "app": "openclaw-agent",
+        "user_id": _label_value(user_id),
+        "container_id": container_id,
+    }
+    if agent_id:
+        labels["agent_id"] = _label_value(agent_id)
+
+    body = k8s_client.V1PersistentVolumeClaim(
+        metadata=k8s_client.V1ObjectMeta(name=pvc_name, namespace=namespace, labels=labels),
+        spec=k8s_client.V1PersistentVolumeClaimSpec(
+            access_modes=["ReadWriteOnce"],
+            storage_class_name=settings.k8s_agent_storage_class,  # None → cluster default
+            resources=k8s_client.V1ResourceRequirements(
+                requests={"storage": settings.k8s_agent_storage_size}
+            ),
+        ),
+    )
+    try:
+        api.create_namespaced_persistent_volume_claim(
+            namespace=namespace, body=body, _request_timeout=timeout
+        )
+        logger.info("k8s pvc created: pvc=%s agent=%s container=%s", pvc_name, agent_id, container_id)
+        return
+    except ApiException as exc:
+        if exc.status != 409:
+            raise
+
+    existing = api.read_namespaced_persistent_volume_claim(
+        name=pvc_name, namespace=namespace, _request_timeout=timeout
+    )
+    owner = ((existing.metadata.labels or {}) if existing.metadata else {}).get("user_id")
+    if owner != _label_value(user_id):
+        raise StorageOwnershipError(
+            f"pvc {pvc_name} belongs to user {owner!r}, not {user_id!r}"
+        )
+    logger.info("k8s pvc reused: pvc=%s agent=%s container=%s", pvc_name, agent_id, container_id)
+
+
+def delete_agent_storage(user_id: str, agent_id: Optional[str], container_id: str) -> bool:
+    """Delete the PVC holding an agent's data. Returns True if gone afterwards.
+
+    Refuses to delete a PVC labelled with a different user. A missing PVC
+    counts as success.
+    """
+    settings = get_settings()
+    namespace = settings.k8s_namespace
+    timeout = (settings.k8s_api_timeout, settings.k8s_api_timeout)
+    pvc_name = agent_pvc_name(agent_id, container_id)
+    api = _get_k8s_client()
+    try:
+        existing = api.read_namespaced_persistent_volume_claim(
+            name=pvc_name, namespace=namespace, _request_timeout=timeout
+        )
+        owner = ((existing.metadata.labels or {}) if existing.metadata else {}).get("user_id")
+        if owner != _label_value(user_id):
+            logger.warning(
+                "k8s pvc delete refused (owner mismatch): pvc=%s owner=%s user=%s", pvc_name, owner, user_id
+            )
+            return False
+        api.delete_namespaced_persistent_volume_claim(
+            name=pvc_name, namespace=namespace, _request_timeout=timeout
+        )
+        logger.info("k8s pvc deleted: pvc=%s agent=%s container=%s", pvc_name, agent_id, container_id)
+        return True
+    except ApiException as exc:
+        if exc.status == 404:
+            logger.info("k8s pvc already gone: pvc=%s", pvc_name)
+            return True
+        logger.exception("k8s pvc deletion failed: pvc=%s error=%s", pvc_name, exc)
+        return False
+
+
+def _agent_storage_spec(pvc_name: str, pod_image: str, image_pull_policy: str):
+    """Return (volumes, volume_mounts, init_containers) for the agent data PVC.
+
+    local-path volumes are created root-owned and fsGroup is not applied to
+    them, so an init container (same image, already pulled) hands the volume to
+    the node user with the 0700 mode OpenClaw requires for ~/.openclaw.
+    """
+    volumes = [
+        k8s_client.V1Volume(
+            name=AGENT_DATA_VOLUME,
+            persistent_volume_claim=k8s_client.V1PersistentVolumeClaimVolumeSource(claim_name=pvc_name),
+        )
+    ]
+    mounts = [k8s_client.V1VolumeMount(name=AGENT_DATA_VOLUME, mount_path=AGENT_DATA_MOUNT_PATH)]
+    init_containers = [
+        k8s_client.V1Container(
+            name="init-openclaw-data",
+            image=pod_image,
+            image_pull_policy=image_pull_policy,
+            command=["sh", "-c", f"chown {NODE_UID}:{NODE_UID} /data && chmod 700 /data"],
+            security_context=k8s_client.V1SecurityContext(run_as_user=0),
+            volume_mounts=[k8s_client.V1VolumeMount(name=AGENT_DATA_VOLUME, mount_path="/data")],
+        )
+    ]
+    return volumes, mounts, init_containers
 
 
 def _update_agent_container(user_id: str, agent_id: str, container_id: str, api_key: str) -> None:
@@ -258,18 +412,31 @@ def provision_pod(detail: Dict[str, Any]) -> None:
 
     k8s_env = [k8s_client.V1EnvVar(name=e["name"], value=e["value"]) for e in raw_env]
 
+    # Persistent agent data (PVC). Older dispatch payloads lack the key; derive it.
+    storage_enabled: bool = detail.get("storage_enabled", get_settings().k8s_agent_storage_enabled)
+    pvc_name: Optional[str] = (
+        detail.get("pvc_name") or agent_pvc_name(agent_id, container_id)
+    ) if storage_enabled else None
+    volumes = mounts = init_containers = None
+    labels = {
+        "app": "openclaw-agent",
+        "user_id": user_id,
+        "container_id": container_id,
+    }
+    if pvc_name:
+        volumes, mounts, init_containers = _agent_storage_spec(pvc_name, pod_image, image_pull_policy)
+        labels["pvc"] = pvc_name
+
     pod = k8s_client.V1Pod(
         metadata=k8s_client.V1ObjectMeta(
             name=container_id,
             namespace=namespace,
-            labels={
-                "app": "openclaw-agent",
-                "user_id": user_id,
-                "container_id": container_id,
-            },
+            labels=labels,
         ),
         spec=k8s_client.V1PodSpec(
             restart_policy="Never",
+            init_containers=init_containers,
+            volumes=volumes,
             containers=[
                 k8s_client.V1Container(
                     name="openclaw-agent",
@@ -277,6 +444,7 @@ def provision_pod(detail: Dict[str, Any]) -> None:
                     image_pull_policy=image_pull_policy,
                     ports=[k8s_client.V1ContainerPort(container_port=8080)],
                     env=k8s_env,
+                    volume_mounts=mounts,
                 )
             ],
             image_pull_secrets=(
@@ -294,6 +462,8 @@ def provision_pod(detail: Dict[str, Any]) -> None:
         return
 
     try:
+        if pvc_name:
+            _ensure_agent_pvc(api, namespace, pvc_name, user_id, agent_id, container_id)
         result = api.create_namespaced_pod(
             namespace=namespace, body=pod, _request_timeout=(settings.k8s_api_timeout, settings.k8s_api_timeout)
         )
@@ -416,13 +586,20 @@ def create_container(
         "image_pull_policy": settings.k8s_image_pull_policy,
         "image_pull_secret": settings.k8s_image_pull_secret,
         "env_vars": [{"name": k, "value": v} for k, v in plain_env.items()],
+        "storage_enabled": settings.k8s_agent_storage_enabled,
+        "pvc_name": agent_pvc_name(agent_id, container_id) if settings.k8s_agent_storage_enabled else None,
     })
 
     return container
 
 
-def stop_container(user_id: str, container_id: str) -> bool:
-    """Delete the Kubernetes Pod backing a container."""
+def stop_container(user_id: str, container_id: str, delete_storage: bool = False) -> bool:
+    """Delete the Kubernetes Pod backing a container.
+
+    An agent's PVC is kept by default so a relaunch (stop + create) keeps its
+    memory; pass delete_storage=True when the agent itself is being deleted.
+    Container-scoped PVCs (no agent_id) are always deleted with the container.
+    """
     container = dynamodb.get_container(user_id, container_id)
     if not container:
         return False
@@ -442,6 +619,9 @@ def stop_container(user_id: str, container_id: str) -> bool:
             logger.exception("k8s pod deletion failed: container=%s error=%s", container_id, exc)
             return False
         logger.info("k8s pod already gone: container=%s pod=%s", container_id, pod_name)
+
+    if settings.k8s_agent_storage_enabled and (delete_storage or not _is_agent_scoped(container.agent_id)):
+        delete_agent_storage(user_id, container.agent_id, container_id)
 
     container.status = "STOPPED"
     container.updated_at = datetime.now(timezone.utc)
