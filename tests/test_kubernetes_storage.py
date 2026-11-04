@@ -74,6 +74,9 @@ def test_provision_creates_pvc_and_mounts_it(aws_mocks):
 
     mock_api.create_namespaced_persistent_volume_claim.assert_called_once()
     pvc_body = mock_api.create_namespaced_persistent_volume_claim.call_args[1]["body"]
+    # kubernetes-client >= 37 validates PVC resources; it must be V1VolumeResourceRequirements.
+    from kubernetes import client as k8s_client
+    assert isinstance(pvc_body.spec.resources, k8s_client.V1VolumeResourceRequirements)
     assert pvc_body.metadata.name == "oc-data-agent-abc"
     assert pvc_body.metadata.labels["user_id"] == "user-123"
     assert pvc_body.metadata.labels["agent_id"] == "agent-abc"

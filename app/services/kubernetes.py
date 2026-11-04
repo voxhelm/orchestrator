@@ -200,7 +200,9 @@ def _ensure_agent_pvc(
         spec=k8s_client.V1PersistentVolumeClaimSpec(
             access_modes=["ReadWriteOnce"],
             storage_class_name=settings.k8s_agent_storage_class,  # None → cluster default
-            resources=k8s_client.V1ResourceRequirements(
+            # PVCs take V1VolumeResourceRequirements; kubernetes-client >= 37
+            # validates this and rejects V1ResourceRequirements.
+            resources=k8s_client.V1VolumeResourceRequirements(
                 requests={"storage": settings.k8s_agent_storage_size}
             ),
         ),
