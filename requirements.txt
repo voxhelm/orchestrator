@@ -7,5 +7,5 @@ boto3>=1.26.0
 httpx>=0.24.0
 cryptography>=40.0.0
 mangum>=0.17.0
-kubernetes>=29.0.0
+kubernetes>=37.0.1,<38
 pysocks>=1.7.0
